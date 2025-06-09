@@ -4,15 +4,16 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchTasks } from '../api/task/task';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
+import dayjs from 'dayjs';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
-import { 
-  WarningOutlined, 
-  InfoCircleOutlined, 
-  FlagOutlined, 
-  CalendarOutlined, 
-  ClockCircleOutlined, 
+import {
+  WarningOutlined,
+  InfoCircleOutlined,
+  FlagOutlined,
+  CalendarOutlined,
+  ClockCircleOutlined,
   UnorderedListOutlined,
   ThunderboltOutlined,
   ExclamationOutlined
@@ -26,8 +27,8 @@ interface Task {
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   assignedToName: string;
   recurring: boolean;
-  category:string;
-  dueDate:string;
+  category: string;
+  dueDate: string;
 }
 
 
@@ -41,7 +42,7 @@ const TaskList = () => {
     today: [],
     upcoming: []
   });
-  
+
   const [activePriority, setActivePriority] = useState('all');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [bannerText, setBannerText] = useState('');
@@ -49,14 +50,14 @@ const TaskList = () => {
   const { data: todayTasks = [], isLoading: loadingToday } = useQuery({
     queryKey: ['tasks', teamId, 'today'],
     // queryFn: () => fetchTasks({ filterType: 'today', teamId }),
-    queryFn: () => fetchTasks({ filterType: 'today', userId:null, teamId }),
+    queryFn: () => fetchTasks({ filterType: 'today', userId: null, teamId }),
     enabled: !!teamId,
     refetchInterval: 5000,
   });
 
   const { data: upcomingTasks = [], isLoading: loadingUpcoming } = useQuery({
     queryKey: ['tasks', teamId, 'upcoming'],
-    queryFn: () => fetchTasks({ filterType: 'upcoming', userId:null, teamId }),
+    queryFn: () => fetchTasks({ filterType: 'upcoming', userId: null, teamId }),
     enabled: !!teamId,
     refetchInterval: 5000,
   });
@@ -73,12 +74,12 @@ const TaskList = () => {
   useEffect(() => {
     let filteredToday = [...todayTasks];
     let filteredUpcoming = [...upcomingTasks];
-    
+
     if (activePriority !== 'all') {
       filteredToday = filteredToday.filter(task => task.priority === activePriority);
       filteredUpcoming = filteredUpcoming.filter(task => task.priority === activePriority);
     }
-    
+
     setTasksToShow({
       today: filteredToday,
       upcoming: filteredUpcoming
@@ -89,7 +90,7 @@ const TaskList = () => {
   useEffect(() => {
     const urgentTasks = todayTasks.filter(task => task.priority === 'HIGH');
     const totalTasks = todayTasks.length + upcomingTasks.length;
-    
+
     if (urgentTasks.length > 0) {
       const names = [...new Set(urgentTasks.map(task => task.assignedToName))].join(', ');
       setBannerText(`URGENT: ${urgentTasks.length} high priority tasks assigned to ${names} - Total tasks: ${totalTasks}`);
@@ -127,7 +128,7 @@ const TaskList = () => {
   if (loadingToday || loadingUpcoming) {
     return (
       <div className="bg-white min-h-screen flex items-center justify-center">
-       <Skeleton active/>
+        <Skeleton active />
       </div>
     );
   }
@@ -206,8 +207,8 @@ const TaskList = () => {
             <div>
               <p className="text-gray-600 text-sm">High Priority</p>
               <p className="text-2xl font-bold text-gray-800">
-                {tasksToShow.today.filter(t => t.priority === 'HIGH').length + 
-                 tasksToShow.upcoming.filter(t => t.priority === 'HIGH').length}
+                {tasksToShow.today.filter(t => t.priority === 'HIGH').length +
+                  tasksToShow.upcoming.filter(t => t.priority === 'HIGH').length}
               </p>
             </div>
           </div>
@@ -218,8 +219,8 @@ const TaskList = () => {
             <div>
               <p className="text-gray-600 text-sm">Medium Priority</p>
               <p className="text-2xl font-bold text-gray-800">
-                {tasksToShow.today.filter(t => t.priority === 'MEDIUM').length + 
-                 tasksToShow.upcoming.filter(t => t.priority === 'MEDIUM').length}
+                {tasksToShow.today.filter(t => t.priority === 'MEDIUM').length +
+                  tasksToShow.upcoming.filter(t => t.priority === 'MEDIUM').length}
               </p>
             </div>
           </div>
@@ -230,8 +231,8 @@ const TaskList = () => {
             <div>
               <p className="text-gray-600 text-sm">Low Priority</p>
               <p className="text-2xl font-bold text-gray-800">
-                {tasksToShow.today.filter(t => t.priority === 'LOW').length + 
-                 tasksToShow.upcoming.filter(t => t.priority === 'LOW').length}
+                {tasksToShow.today.filter(t => t.priority === 'LOW').length +
+                  tasksToShow.upcoming.filter(t => t.priority === 'LOW').length}
               </p>
             </div>
           </div>
@@ -256,7 +257,7 @@ const TaskList = () => {
               Today's Tasks ({tasksToShow.today.length})
             </h2>
           </div>
-          
+
           {tasksToShow.today.length === 0 ? (
             <div className="bg-white p-10 rounded-xl text-center text-2xl text-gray-500 border border-gray-200 shadow-sm">
               No tasks for today.
@@ -282,41 +283,35 @@ const TaskList = () => {
                     <div className={`task-card ${getPriorityClass(task.priority)} rounded-lg p-6 shadow-md h-80 flex flex-col border border-gray-200`}>
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${
-                            task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                            task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
+                          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
+                              task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                            }`}>
                             {task.priority.toUpperCase()}
                           </span>
-                          <br/>
-                          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${
-                            task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                            task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
+                          <br />
+                          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
+                              task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                            }`}>
                             Assigned To: {task.assignedToName}
                           </span>
                           <h3 className="text-3xl md:text-4xl font-bold mt-3 text-gray-800">
                             {task.recurring ? `Reminder: ${task.title}` : task.title}
                           </h3>
                         </div>
-                      
+
                         {getPriorityIcon(task.priority)}
                       </div>
                       <p className="text-lg md:text-xl text-gray-600 mb-6 flex-grow">{task.description}</p>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center">
-                          <ClockCircleOutlined/>
-                         <span className="text-sm text-gray-500 ml-2">
-  {task.dueDate ? (() => {
-    const [hours, minutes] = task.dueDate.split(':');
-    let hour = parseInt(hours, 10);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12 || 12; // Convert "0" to "12"
-    return `Due: ${hour}:${minutes} ${ampm}`;
-  })() : 'No Due Time'}
-</span>
+                          <ClockCircleOutlined />
+                          <span className="text-sm text-gray-500 ml-2">
+                            {task.dueDate
+                              ? `Due: ${dayjs(task.dueDate).format('h:mm A')}`
+                              : 'No Due Time'}
+                          </span>
 
                         </div>
                         {task.category && (
@@ -342,7 +337,7 @@ const TaskList = () => {
               Upcoming Tasks ({tasksToShow.upcoming.length})
             </h2>
           </div>
-          
+
           {tasksToShow.upcoming.length === 0 ? (
             <div className="bg-white p-10 rounded-xl text-center text-2xl text-gray-500 border border-gray-200 shadow-sm">
               No upcoming tasks.
@@ -368,19 +363,17 @@ const TaskList = () => {
                     <div className={`task-card ${getPriorityClass(task.priority)} rounded-lg p-6 shadow-md h-70 flex flex-col border border-gray-200`}>
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${
-                            task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                            task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
+                          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
+                              task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                            }`}>
                             {task.priority.toUpperCase()}
                           </span>
-                          <br/>
-                          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${
-                            task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                            task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
+                          <br />
+                          <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
+                              task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                            }`}>
                             Assigned To: {task.assignedToName}
                           </span>
                           <h3 className="text-3xl md:text-4xl font-bold mt-3 text-gray-800">
@@ -392,13 +385,18 @@ const TaskList = () => {
                       <p className="text-lg md:text-xl text-gray-600 mb-6 flex-grow">{task.description}</p>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center">
-                          <CalendarOutlined/>
+                          <CalendarOutlined />
+                          {/*<span className="text-sm text-gray-500 ml-2">*/}
+                          {/*  {task.dueDate ? `Due: ${new Date(task.dueDate).toLocaleDateString(undefined, { */}
+                          {/*    weekday: 'short', */}
+                          {/*    month: 'short', */}
+                          {/*    day: 'numeric'*/}
+                          {/*  })}` : 'No Due Date'}*/}
+                          {/*</span>*/}
                           <span className="text-sm text-gray-500 ml-2">
-                            {task.dueDate ? `Due: ${new Date(task.dueDate).toLocaleDateString(undefined, { 
-                              weekday: 'short', 
-                              month: 'short', 
-                              day: 'numeric'
-                            })}` : 'No Due Date'}
+                            {task.dueDate
+                              ? `Due: ${dayjs(task.dueDate).format('h:mm A')}`
+                              : 'No Due Time'}
                           </span>
                         </div>
                         {task.category && (

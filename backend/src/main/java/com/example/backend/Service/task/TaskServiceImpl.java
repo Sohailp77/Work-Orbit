@@ -1,4 +1,4 @@
-package com.example.backend.Service;
+package com.example.backend.Service.task;
 
 import com.example.backend.Entity.Task.Task;
 import com.example.backend.Entity.User;
@@ -38,7 +38,6 @@ public class TaskServiceImpl implements TaskService {
     private final TelegramService telegramService;
     private final HtmlMailService htmlMailService;
 
-
     @Override
     public TaskResponse createTask(TaskDTO request, UUID creatorUserId) {
         // Fetch the assigned user
@@ -52,7 +51,15 @@ public class TaskServiceImpl implements TaskService {
         Task task = new Task();
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
-        task.setDueDate(request.getDueDate());
+
+        // 🌐 Treat incoming LocalDateTime as UTC and convert to IST
+        LocalDateTime utcDateTime = request.getDueDate(); // assumed to be in UTC
+        ZonedDateTime zonedUtc = utcDateTime.atZone(ZoneOffset.UTC); // tag as UTC
+        ZonedDateTime istZoned = zonedUtc.withZoneSameInstant(ZoneId.of("Asia/Kolkata")); // convert to IST
+        LocalDateTime istDateTime = istZoned.toLocalDateTime(); // remove offset
+
+        task.setDueDate(istDateTime); // ✅ save in DB as IST LocalDateTime
+
         task.setAssignedTo(assignedTo);
         task.setTeam(team);
         task.setPriority(request.getPriority());
@@ -94,7 +101,6 @@ public class TaskServiceImpl implements TaskService {
         return response;
     }
 
-
     @Async
     public void sendTaskNotificationEmail(Task savedTask) {
         try {
@@ -104,7 +110,7 @@ public class TaskServiceImpl implements TaskService {
             String taskDescription = savedTask.getDescription();
 
             // Handle if dueDate is null
-            String taskDeadline = "No Due Date";  // Default if null
+            String taskDeadline = "No Due Date"; // Default if null
             if (savedTask.getDueDate() != null) {
                 taskDeadline = savedTask.getDueDate().toString(); // Format as necessary
             }
@@ -121,8 +127,7 @@ public class TaskServiceImpl implements TaskService {
                     taskDescription,
                     taskDeadline,
                     assignedBy,
-                    taskLink
-            );
+                    taskLink);
         } catch (MessagingException e) {
             // Log the exception or handle the error as needed
             e.printStackTrace();
@@ -154,7 +159,7 @@ public class TaskServiceImpl implements TaskService {
         // 5. Check if the task is recurring and update accordingly
         if (savedTask.isRecurring()) {
             taskHead = "Reminder Assigned";
-            formattedDueDate = "";  // No due date for recurring tasks
+            formattedDueDate = ""; // No due date for recurring tasks
         } else {
             taskHead = "Task Assigned";
         }
@@ -165,16 +170,13 @@ public class TaskServiceImpl implements TaskService {
                 savedTask.getTitle(),
                 taskHead,
                 savedTask.getDescription(),
-                formattedDueDate
-        );
+                formattedDueDate);
     }
 
-
-
-//    @Scheduled(cron = "0 0 12 * * *")
-//    public void sendTodayTasksToTelegramScheduled() {
-//        sendTodayTasksToTelegram();
-//    }
+    // @Scheduled(cron = "0 0 12 * * *")
+    // public void sendTodayTasksToTelegramScheduled() {
+    // sendTodayTasksToTelegram();
+    // }
 
     @Override
     public TaskResponse sendTodayTasksToTelegram() {
@@ -186,7 +188,7 @@ public class TaskServiceImpl implements TaskService {
 
         if (todaysTasks.isEmpty()) {
 
-            System.out.println( today+ " No tasks due today!");
+            System.out.println(today + " No tasks due today!");
         }
 
         for (Task task : todaysTasks) {
@@ -206,8 +208,7 @@ public class TaskServiceImpl implements TaskService {
                         task.getTitle(),
                         taskHead,
                         task.getDescription(),
-                        formattedDueDate
-                );
+                        formattedDueDate);
                 System.out.println("Telegram message sent for task: " + task.getTitle());
             } catch (Exception e) {
                 System.err.println("Failed to send Telegram message for task: " + task.getTitle());
@@ -219,8 +220,6 @@ public class TaskServiceImpl implements TaskService {
         response.setMessage("Today's tasks sent to Telegram!");
         return response;
     }
-
-
 
     @Override
     public List<TaskResponse> getFilteredTasks(String filterType, UUID userId, UUID teamId) {
@@ -236,7 +235,7 @@ public class TaskServiceImpl implements TaskService {
             LocalDateTime startOfTomorrow = today.plusDays(1).atStartOfDay();
             LocalDateTime futureLimit = startOfTomorrow.plusYears(1);
             normalTasks = fetchTasksForFilter(startOfTomorrow, futureLimit, userId, teamId);
-        }  else if (filterType.equalsIgnoreCase("overdue")) {
+        } else if (filterType.equalsIgnoreCase("overdue")) {
             LocalDate prevYear = today.minusYears(1);
             LocalDate prevDay = today.minusDays(1);
 
@@ -244,8 +243,7 @@ public class TaskServiceImpl implements TaskService {
             LocalDateTime end = prevDay.atTime(LocalTime.MAX); // yesterday, 23:59:59.999999999
 
             normalTasks = fetchTasksForFilter(start, end, userId, teamId);
-        }
-        else {
+        } else {
             normalTasks = new ArrayList<>();
         }
 
@@ -262,8 +260,6 @@ public class TaskServiceImpl implements TaskService {
         return allFilteredTasks;
     }
 
-
-
     private List<Task> fetchTasksForFilter(LocalDateTime start, LocalDateTime end, UUID userId, UUID teamId) {
         if (userId != null && teamId != null) {
             return taskRepository.findTasksByDueDateRangeAndUserAndTeam(start, end, userId, teamId);
@@ -276,8 +272,6 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-
-
     private List<TaskResponse> getRecurringTasks(LocalDate today, String filterType, UUID userId, UUID teamId) {
         List<Task> allRecurringTasks = taskRepository.findAllByRecurringTrue();
         List<TaskResponse> recurringTaskResponses = new ArrayList<>();
@@ -286,7 +280,8 @@ public class TaskServiceImpl implements TaskService {
             boolean isRecurringToday = checkIfRecurringTaskMatchesDate(task, today);
 
             // Both user and team filters must match
-            boolean matchesUser = userId == null || (task.getAssignedTo() != null && task.getAssignedTo().getId().equals(userId));
+            boolean matchesUser = userId == null
+                    || (task.getAssignedTo() != null && task.getAssignedTo().getId().equals(userId));
             boolean matchesTeam = teamId == null || (task.getTeam() != null && task.getTeam().getId().equals(teamId));
 
             if (!(matchesUser && matchesTeam)) {
@@ -303,16 +298,14 @@ public class TaskServiceImpl implements TaskService {
         return recurringTaskResponses;
     }
 
-
-
-
     private boolean checkIfRecurringTaskMatchesDate(Task task, LocalDate today) {
         boolean matches = false;
 
         if (task.getRecurringFrequency() == Task.RecurringFrequency.DAILY) {
             matches = true; // Daily tasks always match
         } else if (task.getRecurringFrequency() == Task.RecurringFrequency.WEEKLY) {
-            int currentDayOfWeek = today.getDayOfWeek().getValue(); // Get current day of the week (1=Monday to 7=Sunday)
+            int currentDayOfWeek = today.getDayOfWeek().getValue(); // Get current day of the week (1=Monday to
+                                                                    // 7=Sunday)
             matches = currentDayOfWeek == task.getWeeklyDay().getValue();
         } else if (task.getRecurringFrequency() == Task.RecurringFrequency.MONTHLY) {
             matches = today.getDayOfMonth() == task.getMonthlyDay();
@@ -321,10 +314,8 @@ public class TaskServiceImpl implements TaskService {
         return matches;
     }
 
-
     // Convert a Task entity to TaskResponse DTO
     private TaskResponse convertToTaskResponse(Task task) {
-
 
         TaskResponse response = new TaskResponse();
         response.setId(task.getId());
@@ -339,9 +330,8 @@ public class TaskServiceImpl implements TaskService {
         // Fetch assigned user's name
         UUID assignedUserId = task.getAssignedTo().getId();
         userRepository.findById(assignedUserId).ifPresent(user -> {
-            response.setAssignedToName(user.getFirstName());  // You need to add this field to TaskResponse
+            response.setAssignedToName(user.getFirstName()); // You need to add this field to TaskResponse
         });
-
 
         // Any additional mapping if necessary
         return response;
@@ -363,7 +353,5 @@ public class TaskServiceImpl implements TaskService {
         }
         taskRepository.deleteById(taskId);
     }
-
-
 
 }

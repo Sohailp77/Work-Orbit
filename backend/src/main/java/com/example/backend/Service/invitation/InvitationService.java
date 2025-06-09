@@ -84,7 +84,8 @@ public class InvitationService {
         teamMember.setUser(receiver);
 
         // Set a default role (e.g., MEMBER)
-        teamMember.setRole(TeamMember.Role.MEMBER);  // Ensure role is set
+        teamMember.setRole(TeamMember.Role.MEMBER); // Ensure role is set
+
         // Save the team member
         teamMemberRepository.save(teamMember);
 
@@ -105,13 +106,5 @@ public class InvitationService {
     public List<PendingInvitationDTO> getPendingInvitationsForUser(UUID receiverId) {
         return invitationRepository.findByReceiverIdAndStatus(receiverId);
     }
-
-
-
-
-
-
-
-
 
 }
