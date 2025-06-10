@@ -86,18 +86,34 @@ const TaskList = () => {
     });
   }, [todayTasks, upcomingTasks, activePriority]);
 
-  // Generate banner text
   useEffect(() => {
     const urgentTasks = todayTasks.filter(task => task.priority === 'HIGH');
-    const totalTasks = todayTasks.length + upcomingTasks.length;
+    const mediumTasks = todayTasks.filter(task => task.priority === 'MEDIUM');
+    const lowTasks = todayTasks.filter(task => task.priority === 'LOW');
+
+    const todaysTotal = todayTasks.length;
+    const upcomingTotal = upcomingTasks.length;
+    const totalTasks = todaysTotal + upcomingTotal;
+
+    const names = [...new Set(urgentTasks.map(task => task.assignedToName))].join(', ');
+
+    let banner = '';
 
     if (urgentTasks.length > 0) {
-      const names = [...new Set(urgentTasks.map(task => task.assignedToName))].join(', ');
-      setBannerText(`URGENT: ${urgentTasks.length} high priority tasks assigned to ${names} - Total tasks: ${totalTasks}`);
-    } else {
-      setBannerText(`You have ${totalTasks} tasks today - Stay organized and productive!`);
+      banner += `🚨 ${urgentTasks.length} HIGH priority task${urgentTasks.length > 1 ? 's' : ''}`;
+      if (names) banner += ` assigned to ${names}`;
+      banner += `. `;
     }
+
+    banner += `📅 Today: ${todaysTotal} task${todaysTotal !== 1 ? 's' : ''} `
+      + `(🟠 Medium: ${mediumTasks.length}, 🟢 Low: ${lowTasks.length} , 🔴 High: ${urgentTasks.length} )`;
+    banner += `. 🔜 Upcoming: ${upcomingTotal} task${upcomingTotal !== 1 ? 's' : ''}.`;
+
+    banner += ` 💡 Stay focused and tackle the urgent ones first!`;
+
+    setBannerText(banner);
   }, [todayTasks, upcomingTasks]);
+
 
   const getPriorityClass = (priority) => {
     switch (priority) {
@@ -159,44 +175,40 @@ const TaskList = () => {
           </div>
         </div>
 
-        {/* Filter Controls
-        <div className="flex flex-wrap gap-2 mb-8">
+        {/* {/* Filter Controls */}
+        <div className="flex flex-wrap gap-2 mb-8 hidden md:flex xl:hidden">
           <button
             onClick={() => setActivePriority('all')}
-            className={`px-4 py-2 rounded-full text-sm font-medium flex items-center ${
-              activePriority === 'all' ? 'bg-gray-200 text-gray-800' : 'bg-white text-gray-700 border border-gray-300'
-            }`}
+            className={`px-4 py-2 rounded-full text-sm font-medium flex items-center ${activePriority === 'all' ? 'bg-gray-200 text-gray-800' : 'bg-white text-gray-700 border border-gray-300'
+              }`}
           >
             All
           </button>
           <button
             onClick={() => setActivePriority('HIGH')}
-            className={`px-4 py-2 rounded-full text-sm font-medium flex items-center ${
-              activePriority === 'HIGH' ? 'bg-red-100 text-red-800' : 'bg-white text-gray-700 border border-gray-300'
-            }`}
+            className={`px-4 py-2 rounded-full text-sm font-medium flex items-center ${activePriority === 'HIGH' ? 'bg-red-100 text-red-800' : 'bg-white text-gray-700 border border-gray-300'
+              }`}
           >
             <WarningOutlined className="mr-2" />
             High
           </button>
           <button
             onClick={() => setActivePriority('MEDIUM')}
-            className={`px-4 py-2 rounded-full text-sm font-medium flex items-center ${
-              activePriority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' : 'bg-white text-gray-700 border border-gray-300'
-            }`}
+            className={`px-4 py-2 rounded-full text-sm font-medium flex items-center ${activePriority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' : 'bg-white text-gray-700 border border-gray-300'
+              }`}
           >
             <InfoCircleOutlined className="mr-2" />
             Medium
           </button>
           <button
             onClick={() => setActivePriority('LOW')}
-            className={`px-4 py-2 rounded-full text-sm font-medium flex items-center ${
-              activePriority === 'LOW' ? 'bg-green-100 text-green-800' : 'bg-white text-gray-700 border border-gray-300'
-            }`}
+            className={`px-4 py-2 rounded-full text-sm font-medium flex items-center ${activePriority === 'LOW' ? 'bg-green-100 text-green-800' : 'bg-white text-gray-700 border border-gray-300'
+              }`}
           >
             <ExclamationOutlined className="mr-2" />
             Low
           </button>
-        </div> */}
+        </div>
 
         {/* Stats Bar */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -284,15 +296,15 @@ const TaskList = () => {
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                              task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-green-100 text-green-800'
+                            task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-green-100 text-green-800'
                             }`}>
                             {task.priority.toUpperCase()}
                           </span>
                           <br />
                           <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                              task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-green-100 text-green-800'
+                            task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-green-100 text-green-800'
                             }`}>
                             Assigned To: {task.assignedToName}
                           </span>
@@ -307,12 +319,11 @@ const TaskList = () => {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center">
                           <ClockCircleOutlined />
-                          <span className="text-sm text-gray-500 ml-2">
+                          <span className="text-xl font-bold text-gray-900 ml-2">
                             {task.dueDate
-                              ? `Due: ${dayjs(task.dueDate).format('h:mm A')}`
+                              ? `Due: ${dayjs(task.dueDate).format('DD MMM YYYY, h:mm A')}`
                               : 'No Due Time'}
                           </span>
-
                         </div>
                         {task.category && (
                           <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded border border-gray-200">
@@ -347,7 +358,7 @@ const TaskList = () => {
               <Swiper
                 modules={[Pagination, Autoplay]}
                 spaceBetween={30}
-                slidesPerView={4} // Fewer slides for upcoming tasks
+                slidesPerView={3} // Fewer slides for upcoming tasks
                 pagination={{
                   clickable: true,
                   el: '.upcoming-pagination',
@@ -364,15 +375,15 @@ const TaskList = () => {
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                              task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-green-100 text-green-800'
+                            task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-green-100 text-green-800'
                             }`}>
                             {task.priority.toUpperCase()}
                           </span>
                           <br />
                           <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                              task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-green-100 text-green-800'
+                            task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-green-100 text-green-800'
                             }`}>
                             Assigned To: {task.assignedToName}
                           </span>
@@ -386,16 +397,9 @@ const TaskList = () => {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center">
                           <CalendarOutlined />
-                          {/*<span className="text-sm text-gray-500 ml-2">*/}
-                          {/*  {task.dueDate ? `Due: ${new Date(task.dueDate).toLocaleDateString(undefined, { */}
-                          {/*    weekday: 'short', */}
-                          {/*    month: 'short', */}
-                          {/*    day: 'numeric'*/}
-                          {/*  })}` : 'No Due Date'}*/}
-                          {/*</span>*/}
-                          <span className="text-sm text-gray-500 ml-2">
+                          <span className="text-xl font-bold text-gray-900 ml-2">
                             {task.dueDate
-                              ? `Due: ${dayjs(task.dueDate).format('h:mm A')}`
+                              ? `Due: ${dayjs(task.dueDate).format('DD MMM YYYY, h:mm A')}`
                               : 'No Due Time'}
                           </span>
                         </div>
